@@ -1,23 +1,26 @@
+mod mcts;
 mod state;
 mod tic_tac_toe;
 
+use mcts::Mcts;
 use state::State;
 use tic_tac_toe::TicTacToe;
 
 fn main() {
-    let mut ttt = TicTacToe::new();
-    ttt.render();
-    ttt = ttt.step((0, 0));
-    ttt.render();
-    ttt = ttt.step((0, 1));
-    ttt.render();
-    ttt = ttt.step((1, 0));
-    ttt.render();
-    ttt = ttt.step((0, 2));
-    ttt.render();
-    println!("{}", ttt.is_terminal());
-    ttt = ttt.step((2, 0));
-    ttt.render();
-    println!("Game Over: {}", ttt.is_terminal());
-    println!("Winner: {}", ttt.reward(1 - ttt.current_player));
+    let mut game = TicTacToe::new();
+
+    while !game.is_terminal() {
+        let mut mcts = Mcts::new(game.clone(), 1.0);
+        let action = mcts.search(10000);
+        game = game.step(action);
+        game.render();
+    }
+    println!("Game over!");
+    if game.player_has_won(0) {
+        println!("Player 0 wins!");
+    } else if game.player_has_won(1) {
+        println!("Player 1 wins!");
+    } else {
+        println!("Draw!");
+    }
 }

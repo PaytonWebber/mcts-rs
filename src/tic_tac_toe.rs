@@ -1,6 +1,8 @@
+use std::fmt::Debug;
+
 use crate::state::State;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TicTacToe {
     board: [[[i32; 2]; 3]; 3],
     pub current_player: usize,
@@ -36,10 +38,10 @@ impl State for TicTacToe {
     }
 
     fn is_terminal(&self) -> bool {
-        self.player_has_won(0) || self.player_has_won(1)
+        self.player_has_won(0) || self.player_has_won(1) || self.legal_actions.is_empty()
     }
 
-    fn get_legal_actions(board: &[[[i32; 2]; 3]; 3]) -> Vec<(usize, usize)> {
+    fn determine_legal_actions(board: &[[[i32; 2]; 3]; 3]) -> Vec<(usize, usize)> {
         let mut legal_actions: Vec<(usize, usize)> = Vec::with_capacity(9);
         for i in 0..3 {
             for j in 0..3 {
@@ -49,6 +51,14 @@ impl State for TicTacToe {
             }
         }
         legal_actions
+    }
+
+    fn get_legal_actions(&self) -> Vec<(usize, usize)> {
+        self.legal_actions.clone()
+    }
+
+    fn to_play(&self) -> usize {
+        self.current_player
     }
 
     fn step(&self, action: (usize, usize)) -> Self {
@@ -113,7 +123,7 @@ impl TicTacToe {
         TicTacToe {
             board,
             current_player: 0,
-            legal_actions: TicTacToe::get_legal_actions(&board),
+            legal_actions: TicTacToe::determine_legal_actions(&board),
         }
     }
 }
