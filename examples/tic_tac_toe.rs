@@ -1,6 +1,7 @@
+use rand::seq::SliceRandom;
 use std::fmt::Debug;
 
-use crate::state::State;
+use mcts_rs::{Mcts, State};
 
 #[derive(Debug, Clone)]
 pub struct TicTacToe {
@@ -125,5 +126,29 @@ impl TicTacToe {
             current_player: 0,
             legal_actions: TicTacToe::determine_legal_actions(&board),
         }
+    }
+}
+
+fn main() {
+    let mut game = TicTacToe::new();
+
+    // Randomly select the first action
+    let action = game.legal_actions.choose(&mut rand::thread_rng()).unwrap();
+    game = game.step(*action);
+
+    while !game.is_terminal() {
+        let mut mcts = Mcts::new(game.clone(), 1.4);
+        let action = mcts.search(100000);
+        game = game.step(action);
+        game.render();
+    }
+
+    println!("Game over!");
+    if game.player_has_won(0) {
+        println!("Player 0 wins!");
+    } else if game.player_has_won(1) {
+        println!("Player 1 wins!");
+    } else {
+        println!("Draw!");
     }
 }
