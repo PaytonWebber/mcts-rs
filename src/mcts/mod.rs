@@ -5,9 +5,11 @@ use crate::state::State;
 use arena::Arena;
 use node::Node;
 
+use rand::seq::SliceRandom;
+
 pub struct Mcts<S: State> {
-    arena: Arena<S>,
-    root_id: usize,
+    pub arena: Arena<S>,
+    pub root_id: usize,
     c: f64,
 }
 
@@ -26,14 +28,24 @@ impl<S: State + std::fmt::Debug + std::clone::Clone> Mcts<S> {
             if !selected_node.state.is_terminal() {
                 self.expand(selected_id);
                 let children: &Vec<usize> = &self.arena.get_node(selected_id).children;
-                let random_child: usize = children[0]; // NOTE: Not actually random due to the way legal actions are determined.
+                let random_child: usize = children.choose(&mut rand::thread_rng()).unwrap().clone();
                 selected_id = random_child;
             }
             let reward: f64 = self.simulate(selected_id);
             self.backprop(selected_id, reward);
         }
         let root_node: &Node<S> = self.arena.get_node(self.root_id);
-        let best_child: usize = root_node.get_best_child(&self.arena, 0.0);
+        let best_child: usize = root_node
+            .children
+            .iter()
+            .max_by(|&a, &b| {
+                let node_a_score = self.arena.get_node(*a).q;
+                let node_b_score = self.arena.get_node(*b).q;
+                node_a_score.partial_cmp(&node_b_score).unwrap()
+            })
+            .unwrap()
+            .clone();
+
         let best_action: (usize, usize) = self.arena.get_node(best_child).action;
         best_action
     }
@@ -67,24 +79,29 @@ impl<S: State + std::fmt::Debug + std::clone::Clone> Mcts<S> {
         let mut state: S = node.state.clone();
         while !state.is_terminal() {
             let legal_actions = state.get_legal_actions();
-            let action = legal_actions[0]; //  NOTE: Not actually random due to the way legal actions are determined.
+            let action = legal_actions
+                .choose(&mut rand::thread_rng())
+                .unwrap()
+                .clone();
             state = state.step(action);
         }
         let reward: f64 = state.reward(node.state.to_play()) as f64;
         reward
     }
 
-    fn backprop(&mut self, id: usize, reward: f64) {
+    fn backprop(&mut self, id: usize, mut reward: f64) {
         let mut current: usize = id;
         loop {
             let node = self.arena.get_node_mut(current);
             node.reward_sum += reward;
             node.n += 1;
+            node.q = node.reward_sum / node.n as f64;
             if let Some(parent_id) = node.parent {
                 current = parent_id;
             } else {
                 break;
             }
+            reward = -reward;
         }
     }
 }
