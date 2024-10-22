@@ -1,5 +1,4 @@
 use rand::seq::SliceRandom;
-use std::fmt::Debug;
 
 use mcts_rs::{Mcts, State};
 
@@ -118,8 +117,8 @@ impl State for TicTacToe {
     }
 }
 
-impl TicTacToe {
-    pub fn new() -> Self {
+impl Default for TicTacToe {
+    fn default() -> Self {
         let board = [[[0; 2]; 3]; 3];
         TicTacToe {
             board,
@@ -130,7 +129,7 @@ impl TicTacToe {
 }
 
 fn main() {
-    let mut game = TicTacToe::new();
+    let mut game = TicTacToe::default();
 
     // Randomly select the first action
     let action = game.legal_actions.choose(&mut rand::thread_rng()).unwrap();
@@ -138,7 +137,7 @@ fn main() {
 
     while !game.is_terminal() {
         let mut mcts = Mcts::new(game.clone(), 1.4);
-        let action = mcts.search(100000);
+        let action = mcts.search(1000);
         game = game.step(action);
         game.render();
     }
