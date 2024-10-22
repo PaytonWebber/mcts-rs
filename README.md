@@ -110,7 +110,3 @@ pub trait State {
 ```
 
 By implementing this trait for your game or decision process, you can integrate it with the MCTS algorithm provided in this library. The `tic_tac_toe.rs` file offers an example implementation of the `State` trait for Tic-Tac-Toe.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
