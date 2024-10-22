@@ -1,7 +1,14 @@
 [package]
 name = "mcts-rs"
 version = "0.1.0"
-edition = "2021"
+authors = ["Payton Webber <paytonwebber@gmail.com>"]
+description = "A Rust implementation of Monte Carlo Tree Search (MCTS) using an arena allocator."
+license = "MIT"
+repository = "https://github.com/PaytonWebber/mcts-rs"
+readme = "README.md"
+keywords = ["mcts", "monte-carlo-tree-search", "arena-allocator", "rust"]
+categories = ["algorithms", "data-structures"]
+
 
 [dependencies]
 rand = "0.8.5"
