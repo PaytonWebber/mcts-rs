@@ -17,7 +17,6 @@ A Rust implementation of the Monte Carlo Tree Search (MCTS) algorithm using an a
   - [Arena Allocator](#arena-allocator)
   - [MCTS Algorithm](#mcts-algorithm)
   - [State Trait](#state-trait)
-- [License](#license)
 
 ## Introduction
 
