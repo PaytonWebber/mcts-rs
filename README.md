@@ -21,9 +21,9 @@ A Rust implementation of the Monte Carlo Tree Search (MCTS) algorithm using an a
 
 ## Introduction
 
-Monte Carlo Tree Search (MCTS) is a heuristic search algorithm used for decision-making processes. This project provides a Rust implementation of MCTS that efficiently manages memory using an arena allocator. By storing all nodes in a central arena, we avoid the overhead of reference counting and interior mutability, resulting in a more performant and idiomatic Rust codebase.
+Monte Carlo Tree Search (MCTS) is a search algorithm used for decision-making processes. This project provides a Rust implementation of MCTS that efficiently manages memory using an arena allocator. By storing all nodes in a central arena, we avoid the overhead of reference counting and interior mutability, resulting in a more performant and idiomatic Rust codebase.
 
-The included Tic-Tac-Toe game serves as a practical example of how the MCTS algorithm operates.
+The included Tic-Tac-Toe game serves as a practical example of how to use the MCTS library.
 
 ## Features
 
@@ -38,12 +38,12 @@ The included Tic-Tac-Toe game serves as a practical example of how the MCTS algo
 
 ### Installation
 
-Clone the repository:
+1. **Clone the repository**:
 
-```bash
-git clone https://github.com/PaytonWebber/mcts-rs.git
-cd mcts-rs
-```
+   ```bash
+   git clone https://github.com/PaytonWebber/mcts-rs.git
+   cd mcts-rs
+   ```
 
 ### Running the Tic-Tac-Toe Example
 
@@ -77,32 +77,39 @@ The MCTS algorithm consists of four main steps:
 **Key Components:**
 
 - **Node Struct** (`node.rs`): Represents a node in the search tree.
-- **Arena Struct** (`arena.rs`): Stores all nodes and is used to manage parent-child relationships between nodes.
+- **Arena Struct** (`arena.rs`): Stores all nodes and manages parent-child relationships between nodes.
 - **MCTS Implementation** (`mod.rs`): Contains the logic for selection, expansion, simulation, and backpropagation.
 
 ### State Trait
 
-The `State` trait abstracts the game logic, allowing the MCTS algorithm to work with any game or decision process that implements this trait.
+The `State` trait abstracts the game logic, allowing the MCTS algorithm to work with any game or decision process that implements this trait. Here's the trait definition:
 
 ```rust
-pub trait State: Clone {
-    fn get_legal_actions(&self) -> Vec<(usize, usize)>;
+pub trait State {
+    /// Checks if the specified player has won the game.
+    fn player_has_won(&self, player: usize) -> bool;
+    
+    /// Determines if the current state is a terminal state (no further moves possible).
     fn is_terminal(&self) -> bool;
-    fn reward(&self, player: usize) -> f64;
-    fn step(&self, action: (usize, usize)) -> Self;
+    
+    /// Returns a vector of legal actions available from the current state.
+    fn get_legal_actions(&self) -> Vec<(usize, usize)>;
+    
+    /// Returns the index of the player whose turn it is to play.
     fn to_play(&self) -> usize;
+    
+    /// Returns a new state resulting from applying the given action to the current state.
+    fn step(&self, action: (usize, usize)) -> Self;
+    
+    /// Calculates and returns the reward for the specified player in the current state.
+    fn reward(&self, player: usize) -> f32;
+    
+    /// Renders or prints the current state (useful for debugging or display purposes).
+    fn render(&self);
 }
 ```
 
-Implementing this trait for a game involves defining:
-
-- **Legal Actions**: Available moves from a given state.
-- **Terminal State Check**: Determines if the game has ended.
-- **Reward Calculation**: Assigns a reward at the end of the game.
-- **State Transition**: Defines how the game state changes with each move.
-- **Player Turn**: Indicates which player's turn it is.
-
-The `tic_tac_toe.rs` file provides an example implementation of the `State` trait for Tic-Tac-Toe.
+By implementing this trait for your game or decision process, you can integrate it with the MCTS algorithm provided in this library. The `tic_tac_toe.rs` file offers an example implementation of the `State` trait for Tic-Tac-Toe.
 
 ## License
 
