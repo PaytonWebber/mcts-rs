@@ -1,5 +1,7 @@
 # Rust Monte Carlo Tree Search (MCTS) with Arena Allocator
 
+[![Crates.io](https://img.shields.io/crates/v/mcts-rs.svg)](https://crates.io/crates/mcts-rs)
+[![Documentation](https://docs.rs/mcts-rs/badge.svg)](https://docs.rs/mcts-rs)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Rust](https://img.shields.io/badge/rust-1.56%2B-orange.svg)
 
@@ -11,16 +13,19 @@ A Rust implementation of the Monte Carlo Tree Search (MCTS) algorithm using an a
 - [Features](#features)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
+  - [Adding to Your Project](#adding-to-your-project)
   - [Running the Tic-Tac-Toe Example](#running-the-tic-tac-toe-example)
 - [Implementation Details](#implementation-details)
   - [Arena Allocator](#arena-allocator)
   - [MCTS Algorithm](#mcts-algorithm)
   - [State Trait](#state-trait)
+- [License](#license)
 
 ## Introduction
 
 Monte Carlo Tree Search (MCTS) is a search algorithm used for decision-making processes. This project provides a Rust implementation of MCTS that efficiently manages memory using an arena allocator. By storing all nodes in a central arena, we avoid the overhead of reference counting and interior mutability, resulting in a more performant and idiomatic Rust codebase.
+
+The `mcts-rs` crate is now available on [crates.io](https://crates.io/crates/mcts-rs), making it easy to include in your Rust projects.
 
 The included Tic-Tac-Toe game serves as a practical example of how to use the MCTS library.
 
@@ -35,20 +40,24 @@ The included Tic-Tac-Toe game serves as a practical example of how to use the MC
 
 - **Rust**: Ensure you have Rust and Cargo installed. You can install Rust using [rustup](https://rustup.rs/).
 
-### Installation
+### Adding to Your Project
 
-1. **Clone the repository**:
+To include `mcts-rs` in your project, add the following to your `Cargo.toml`:
 
-   ```bash
-   git clone https://github.com/PaytonWebber/mcts-rs.git
-   cd mcts-rs
-   ```
+```toml
+[dependencies]
+mcts-rs = "0.1.0"
+```
+
+Replace `"0.1.0"` with the latest version available on [crates.io](https://crates.io/crates/mcts-rs).
 
 ### Running the Tic-Tac-Toe Example
 
-To run the Tic-Tac-Toe game where the MCTS algorithm plays against itself with a random starting move, use the following command:
+To run the Tic-Tac-Toe game where the MCTS algorithm plays against itself with a random starting move, clone the repository and use the following commands:
 
 ```bash
+git clone https://github.com/PaytonWebber/mcts-rs.git
+cd mcts-rs
 cargo run --example tic_tac_toe
 ```
 
@@ -87,25 +96,29 @@ The `State` trait abstracts the game logic, allowing the MCTS algorithm to work 
 pub trait State {
     /// Checks if the specified player has won the game.
     fn player_has_won(&self, player: usize) -> bool;
-    
+
     /// Determines if the current state is a terminal state (no further moves possible).
     fn is_terminal(&self) -> bool;
-    
+
     /// Returns a vector of legal actions available from the current state.
     fn get_legal_actions(&self) -> Vec<(usize, usize)>;
-    
+
     /// Returns the index of the player whose turn it is to play.
     fn to_play(&self) -> usize;
-    
+
     /// Returns a new state resulting from applying the given action to the current state.
     fn step(&self, action: (usize, usize)) -> Self;
-    
+
     /// Calculates and returns the reward for the specified player in the current state.
     fn reward(&self, player: usize) -> f32;
-    
+
     /// Renders or prints the current state (useful for debugging or display purposes).
     fn render(&self);
 }
 ```
 
 By implementing this trait for your game or decision process, you can integrate it with the MCTS algorithm provided in this library. The `tic_tac_toe.rs` file offers an example implementation of the `State` trait for Tic-Tac-Toe.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
