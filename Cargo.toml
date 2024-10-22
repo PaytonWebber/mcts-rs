@@ -2,6 +2,7 @@
 name = "mcts-rs"
 version = "0.1.0"
 authors = ["Payton Webber <paytonwebber@gmail.com>"]
+edition = "2021"
 description = "A Rust implementation of Monte Carlo Tree Search (MCTS) using an arena allocator."
 license = "MIT"
 repository = "https://github.com/PaytonWebber/mcts-rs"
