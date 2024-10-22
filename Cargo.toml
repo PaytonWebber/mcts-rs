@@ -7,7 +7,7 @@ description = "A Rust implementation of Monte Carlo Tree Search (MCTS) using an 
 license = "MIT"
 repository = "https://github.com/PaytonWebber/mcts-rs"
 readme = "README.md"
-keywords = ["mcts", "monte-carlo-tree-search", "arena-allocator", "rust"]
+keywords = ["mcts", "arena-allocator", "rust"]
 categories = ["algorithms", "data-structures"]
 
 
