@@ -40,19 +40,6 @@ impl State for TicTacToe {
     fn is_terminal(&self) -> bool {
         self.player_has_won(0) || self.player_has_won(1) || self.legal_actions.is_empty()
     }
-
-    fn determine_legal_actions(board: &[[[i32; 2]; 3]; 3]) -> Vec<(usize, usize)> {
-        let mut legal_actions: Vec<(usize, usize)> = Vec::with_capacity(9);
-        for i in 0..3 {
-            for j in 0..3 {
-                if (board[i][j][0] == 0) && (board[i][j][1] == 0) {
-                    legal_actions.push((i, j));
-                }
-            }
-        }
-        legal_actions
-    }
-
     fn get_legal_actions(&self) -> Vec<(usize, usize)> {
         self.legal_actions.clone()
     }
@@ -114,6 +101,20 @@ impl State for TicTacToe {
                 println!("\n");
             }
         }
+    }
+}
+
+impl TicTacToe {
+    fn determine_legal_actions(board: &[[[i32; 2]; 3]; 3]) -> Vec<(usize, usize)> {
+        let mut legal_actions = Vec::new();
+        for i in 0..3 {
+            for j in 0..3 {
+                if board[i][j][0] == 0 && board[i][j][1] == 0 {
+                    legal_actions.push((i, j));
+                }
+            }
+        }
+        legal_actions
     }
 }
 
