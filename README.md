@@ -85,6 +85,12 @@ The `State` trait abstracts the game logic, allowing the MCTS algorithm to work 
 
 ```rust
 pub trait State {
+    /// The type of action that can be taken in the state (e.g., tuple of coordinates). 
+    type Action: Copy;
+    
+    /// Returns the default action for the state (used for root node).
+    fn default_action() -> Self::Action;
+
     /// Checks if the specified player has won the game.
     fn player_has_won(&self, player: usize) -> bool;
     
