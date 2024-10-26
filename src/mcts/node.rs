@@ -4,7 +4,7 @@ use crate::state::State;
 #[derive(Debug)]
 pub struct Node<S: State> {
     pub state: S,
-    pub action: (usize, usize),
+    pub action: S::Action,
     pub parent: Option<usize>,
     pub reward_sum: f64,
     pub n: usize, // number of visits
@@ -13,7 +13,7 @@ pub struct Node<S: State> {
 }
 
 impl<S: State> Node<S> {
-    pub fn new(state: S, action: (usize, usize), parent: Option<usize>) -> Self {
+    pub fn new(state: S, action: S::Action, parent: Option<usize>) -> Self {
         Node {
             state,
             action,

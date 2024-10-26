@@ -4,7 +4,7 @@ use mcts_rs::{Mcts, State};
 
 #[derive(Debug, Clone)]
 pub struct TicTacToe {
-    board: [[[i32; 2]; 3]; 3],
+    board: [[[u8; 2]; 3]; 3],
     pub current_player: usize,
     pub legal_actions: Vec<(usize, usize)>,
 }
@@ -24,6 +24,12 @@ const WINNER_MASK: [[(usize, usize); 3]; 8] = [
 ];
 
 impl State for TicTacToe {
+    type Action = (usize, usize);
+
+    fn default_action() -> Self::Action {
+        (0, 0)
+    }
+
     fn player_has_won(&self, player: usize) -> bool {
         for line in WINNER_MASK.iter() {
             let [(i0, j0), (i1, j1), (i2, j2)] = *line;
@@ -105,7 +111,7 @@ impl State for TicTacToe {
 }
 
 impl TicTacToe {
-    fn determine_legal_actions(board: &[[[i32; 2]; 3]; 3]) -> Vec<(usize, usize)> {
+    fn determine_legal_actions(board: &[[[u8; 2]; 3]; 3]) -> Vec<(usize, usize)> {
         let mut legal_actions = Vec::new();
         for i in 0..3 {
             for j in 0..3 {
@@ -137,8 +143,8 @@ fn main() {
     game = game.step(*action);
 
     while !game.is_terminal() {
-        let mut mcts = Mcts::new(game.clone(), 1.4);
-        let action = mcts.search(1000);
+        let mut mcts = Mcts::new(game.clone(), 5.0);
+        let action = mcts.search(100000);
         game = game.step(action);
         game.render();
     }

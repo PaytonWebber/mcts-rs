@@ -16,12 +16,12 @@ pub struct Mcts<S: State> {
 impl<S: State + std::fmt::Debug + std::clone::Clone> Mcts<S> {
     pub fn new(state: S, c: f64) -> Self {
         let mut arena: Arena<S> = Arena::new();
-        let root: Node<S> = Node::new(state.clone(), (0, 0), None);
+        let root: Node<S> = Node::new(state.clone(), S::default_action(), None);
         let root_id: usize = arena.add_node(root);
         Mcts { arena, root_id, c }
     }
 
-    pub fn search(&mut self, n: usize) -> (usize, usize) {
+    pub fn search(&mut self, n: usize) -> S::Action {
         for _ in 0..n {
             let mut selected_id: usize = self.select();
             let selected_node: &Node<S> = self.arena.get_node(selected_id);
@@ -46,7 +46,7 @@ impl<S: State + std::fmt::Debug + std::clone::Clone> Mcts<S> {
             .unwrap()
             .clone();
 
-        let best_action: (usize, usize) = self.arena.get_node(best_child).action;
+        let best_action: S::Action = self.arena.get_node(best_child).action;
         best_action
     }
 
@@ -64,7 +64,7 @@ impl<S: State + std::fmt::Debug + std::clone::Clone> Mcts<S> {
 
     fn expand(&mut self, id: usize) {
         let parent: &Node<S> = self.arena.get_node_mut(id);
-        let legal_actions: Vec<(usize, usize)> = parent.state.get_legal_actions();
+        let legal_actions: Vec<S::Action> = parent.state.get_legal_actions();
         let parent_state: S = parent.state.clone();
         for action in legal_actions {
             let state = parent_state.step(action);
