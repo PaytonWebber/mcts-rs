@@ -54,14 +54,14 @@ impl State for TicTacToe {
         self.current_player
     }
 
-    fn step(&self, action: (usize, usize)) -> Self {
+    fn step(&self, action: &(usize, usize)) -> Self {
         let mut new_board = self.board;
         new_board[action.0][action.1][self.current_player] = 1;
 
         // Create a new vector excluding the taken action
         let mut new_legal_actions = Vec::with_capacity(self.legal_actions.len() - 1);
         for &a in &self.legal_actions {
-            if a != action {
+            if a != *action {
                 new_legal_actions.push(a);
             }
         }
@@ -140,12 +140,12 @@ fn main() {
 
     // Randomly select the first action
     let action = game.legal_actions.choose(&mut rand::thread_rng()).unwrap();
-    game = game.step(*action);
+    game = game.step(action);
 
     while !game.is_terminal() {
         let mut mcts = Mcts::new(game.clone(), 5.0);
-        let action = mcts.search(100000);
-        game = game.step(action);
+        let action = mcts.search(1000);
+        game = game.step(&action);
         game.render();
     }
 

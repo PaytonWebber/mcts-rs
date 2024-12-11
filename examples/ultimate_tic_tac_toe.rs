@@ -30,7 +30,7 @@ impl State for UltimateTicTacToe {
         (0, 0, 0)
     }
 
-    fn step(&self, action: (usize, usize, usize)) -> Self {
+    fn step(&self, action: &(usize, usize, usize)) -> Self {
         let mut new_board = self.board.clone();
         new_board[action.0][action.1][action.2][self.player as usize] = 1;
         let legal_actions =
@@ -208,7 +208,7 @@ impl UltimateTicTacToe {
     fn mini_board_full(board: &[[[[u8; 2]; 3]; 3]; 9], board_idx: usize) -> bool {
         for i in 0..3 {
             for j in 0..3 {
-                if board[board_idx][i][j][0] == 0 && board[board_idx][i][j][0] == 0 {
+                if board[board_idx][i][j][0] == 0 && board[board_idx][i][j][1] == 0 {
                     return false;
                 }
             }
@@ -220,12 +220,12 @@ impl UltimateTicTacToe {
 fn main() {
     let mut game = UltimateTicTacToe::new();
     let action = game.legal_actions.choose(&mut rand::thread_rng()).unwrap();
-    game = game.step(*action);
+    game = game.step(action);
 
     while !game.is_terminal() {
         let mut mcts = Mcts::new(game.clone(), 1.4);
         let action = mcts.search(1000);
-        game = game.step(action);
+        game = game.step(&action);
         game.render();
     }
 
