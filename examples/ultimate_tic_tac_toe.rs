@@ -2,43 +2,44 @@ use mcts_rs::{Mcts, State};
 
 #[derive(Debug, Clone)]
 struct UltimateTicTacToe {
-    board: [u8; 81],
-    macro_board: [u8; 9],
+    board_x: [u16; 9],
+    board_o: [u16; 9],
+    macro_board_x: u16,
+    macro_board_o: u16,
     current_player: usize,
-    legal_actions: Vec<(usize, usize, usize)>,
+    legal_actions: Vec<(u8, u8, u8)>,
 }
 
-const P1: u8 = 1;
-const P2: u8 = 2;
-const TIE: u8 = 3;
+const WIN_PATTERNS: [u16; 8] = [
+    // rows
+    0b111000000,
+    0b000111000,
+    0b000000111,
+    // cols
+    0b100100100,
+    0b010010010,
+    0b001001001,
+    // diags
+    0b100010001,
+    0b001010100,
+];
 
 impl State for UltimateTicTacToe {
-    type Action = (usize, usize, usize); // Mini-board, Row, Col
+    type Action = (u8, u8, u8); // Mini-board, Row, Col
+
     fn default_action() -> Self::Action {
         (0, 0, 0)
     }
 
     fn player_has_won(&self, player: usize) -> bool {
-        let board = &self.macro_board;
-        let player_val = get_player_val(player);
-        for i in 0..3 {
-            // Row check
-            if board[i * 3] == player_val
-                && board[i * 3 + 1] == player_val
-                && board[i * 3 + 2] == player_val
-            {
+        let board = match player {
+            0_usize => self.macro_board_x,
+            _ => self.macro_board_o,
+        };
+        for &pattern in WIN_PATTERNS.iter() {
+            if (board & pattern) == pattern {
                 return true;
             }
-
-            // Col check
-            if board[i] == player_val && board[i + 3] == player_val && board[i + 6] == player_val {
-                return true;
-            }
-        }
-        if (board[0] == player_val && board[4] == player_val && board[8] == player_val)
-            || (board[2] == player_val && board[4] == player_val && board[6] == player_val)
-        {
-            return true;
         }
         false
     }
@@ -56,20 +57,43 @@ impl State for UltimateTicTacToe {
     }
 
     fn step(&self, action: Self::Action) -> Self {
-        let mut board_clone = self.board.clone();
+        let mut board_x_clone = self.board_x.clone();
+        let mut board_o_clone = self.board_o.clone();
+        if self.current_player == 0 {
+            set_bit(
+                &mut board_x_clone,
+                action.0 as usize,
+                action.1 * 3 + action.2,
+            );
+        } else {
+            set_bit(
+                &mut board_o_clone,
+                action.0 as usize,
+                action.1 * 3 + action.2,
+            );
+        }
+        let mut macro_board_clone_x = self.macro_board_x.clone();
+        let mut macro_board_clone_o = self.macro_board_o.clone();
+        update_macro_board(
+            board_x_clone,
+            board_o_clone,
+            &mut macro_board_clone_x,
+            &mut macro_board_clone_o,
+            action.0 as usize,
+        );
         let current_player = 1 - self.current_player;
-        let player_val = get_player_val(current_player);
-        board_clone[action.0 * 9 + action.1 * 3 + action.2] = player_val;
-
-        let mut macro_clone = self.macro_board.clone();
-        update_macro_board(&mut macro_clone, &board_clone, action.0);
-
-        let legal_actions =
-            determine_legal_actions(action.1 * 3 + action.2, &macro_clone, &board_clone);
-
+        let legal_actions = determine_legal_actions(
+            board_x_clone,
+            board_o_clone,
+            macro_board_clone_x,
+            macro_board_clone_o,
+            (action.1 * 3 + action.2) as usize,
+        );
         UltimateTicTacToe {
-            board: board_clone,
-            macro_board: macro_clone,
+            board_x: board_x_clone,
+            board_o: board_o_clone,
+            macro_board_x: macro_board_clone_x,
+            macro_board_o: macro_board_clone_o,
             current_player,
             legal_actions,
         }
@@ -87,123 +111,101 @@ impl State for UltimateTicTacToe {
 
     fn render(&self) {
         println!("X: player 0, O: player 1\n");
-
         for big_row in 0..3 {
             for sub_row in 0..3 {
-                let mut current_lines: Vec<String> = Vec::new();
-
+                let mut row_segments: Vec<String> = Vec::with_capacity(3);
                 for big_col in 0..3 {
-                    let mut sub_line = String::new();
-
+                    let mini_board_index = big_row * 3 + big_col;
+                    let mut segment = String::new();
                     for sub_col in 0..3 {
-                        // Calculate the index in the 1D array
-                        let index = (big_row * 3 + big_col) * 9 + sub_row * 3 + sub_col;
+                        let pos = sub_row * 3 + sub_col;
+                        let mask = 1 << pos;
 
-                        match self.board[index] {
-                            1 => sub_line.push('X'),
-                            2 => sub_line.push('O'),
-                            _ => sub_line.push(' '),
+                        if (self.board_x[mini_board_index] & mask) != 0 {
+                            segment.push('X');
+                        } else if (self.board_o[mini_board_index] & mask) != 0 {
+                            segment.push('O');
+                        } else {
+                            segment.push(' ');
                         }
-
                         if sub_col < 2 {
-                            sub_line.push('|');
+                            segment.push('|');
                         }
                     }
-
-                    current_lines.push(sub_line);
+                    row_segments.push(segment);
                 }
-
                 println!(
                     " {} || {} || {}",
-                    current_lines[0], current_lines[1], current_lines[2]
+                    row_segments[0], row_segments[1], row_segments[2]
                 );
             }
-
             if big_row < 2 {
-                println!("=======||=======||========");
+                println!("=======||=======||=======");
             }
         }
-
         println!();
     }
 }
 
-fn get_player_val(player: usize) -> u8 {
-    if player == 0 {
-        return P1;
-    } else if player == 1 {
-        return P2;
-    }
-    u8::MAX
-}
+fn update_macro_board(
+    board_x: [u16; 9],
+    board_o: [u16; 9],
+    macro_board_x: &mut u16,
+    macro_board_o: &mut u16,
+    board_to_check: usize,
+) {
+    let mini_board_x = board_x[board_to_check];
+    let mini_board_o = board_o[board_to_check];
 
-fn update_macro_board(macro_board: &mut [u8; 9], full_board: &[u8; 81], macro_idx: usize) {
-    let offset = macro_idx * 9;
-    let sub_board = &full_board[offset..offset + 9];
-    let mut winner = 0;
-    for i in 0..3 {
-        if sub_board[i * 3] != 0
-            && sub_board[i * 3] == sub_board[i * 3 + 1]
-            && sub_board[i * 3 + 1] == sub_board[i * 3 + 2]
-        {
-            winner = sub_board[i * 3];
-            break;
+    for &pattern in WIN_PATTERNS.iter() {
+        if (mini_board_x & pattern) == pattern {
+            *macro_board_x |= 1 << board_to_check;
+            return;
+        } else if (mini_board_o & pattern) == pattern {
+            *macro_board_o |= 1 << board_to_check;
+            return;
         }
-        if sub_board[i] != 0
-            && sub_board[i] == sub_board[i + 3]
-            && sub_board[i + 3] == sub_board[i + 6]
-        {
-            winner = sub_board[i];
-            break;
-        }
-    }
-    if winner == 0 {
-        if sub_board[0] != 0 && sub_board[0] == sub_board[4] && sub_board[4] == sub_board[8] {
-            winner = sub_board[0];
-        } else if sub_board[2] != 0 && sub_board[2] == sub_board[4] && sub_board[4] == sub_board[6]
-        {
-            winner = sub_board[2];
-        }
-    }
-    if winner == P1 || winner == P2 {
-        macro_board[macro_idx] = winner;
-        return;
-    }
-    if sub_board.iter().all(|&cell| cell != 0) {
-        macro_board[macro_idx] = TIE;
     }
 }
 
 fn determine_legal_actions(
-    next_sub_board: usize,
-    macro_board: &[u8; 9],
-    full_board: &[u8; 81],
-) -> Vec<(usize, usize, usize)> {
-    let mut actions = Vec::new();
-    if macro_board[next_sub_board] == 0 {
-        let start_index = next_sub_board * 9;
-        for i in 0..9 {
-            if full_board[start_index + i] == 0 {
-                actions.push((next_sub_board, i / 3, i % 3));
+    board_x: [u16; 9],
+    board_o: [u16; 9],
+    macro_board_x: u16,
+    macro_board_o: u16,
+    next_board: usize,
+) -> Vec<(u8, u8, u8)> {
+    let mut actions: Vec<(u8, u8, u8)> = Vec::with_capacity(81);
+    let pos = 1 << next_board;
+    if ((macro_board_x & pos) == 0 && (macro_board_o & pos) == 0)
+        && ((board_x[next_board] | board_o[next_board]) != 0x1FF)
+    {
+        for pos in 0..9 {
+            let mask = 1 << pos;
+            if (board_x[next_board] & mask) == 0 && (board_o[next_board] & mask) == 0 {
+                actions.push((next_board as u8, pos / 3, pos % 3));
             }
         }
     } else {
-        // We can play on any empty cell in the entire board
-        for i in 0..81 {
-            if full_board[i] == 0 {
-                let board_idx = i / 9;
-                let row = (i % 9) / 3;
-                let col = (i % 9) % 3;
-                actions.push((board_idx, row, col));
+        for i in 0..9 {
+            for pos in 0..9 {
+                let mask = 1 << pos;
+                if (board_x[i] & mask) == 0 && (board_o[i] & mask) == 0 {
+                    actions.push((i as u8, pos / 3, pos % 3));
+                }
             }
         }
     }
     actions
 }
 
+fn set_bit(board: &mut [u16; 9], mini_board: usize, pos: u8) {
+    board[mini_board] |= 1 << pos;
+}
+
 impl UltimateTicTacToe {
     pub fn new() -> UltimateTicTacToe {
-        let mut legal_actions: Vec<(usize, usize, usize)> = Vec::with_capacity(81);
+        let mut legal_actions: Vec<(u8, u8, u8)> = Vec::with_capacity(81);
         for i in 0..9 {
             for j in 0..3 {
                 for k in 0..3 {
@@ -212,8 +214,10 @@ impl UltimateTicTacToe {
             }
         }
         UltimateTicTacToe {
-            board: [0; 81],
-            macro_board: [0; 9],
+            board_x: [0; 9],
+            board_o: [0; 9],
+            macro_board_x: 0,
+            macro_board_o: 0,
             current_player: 0,
             legal_actions,
         }
@@ -224,7 +228,7 @@ fn main() {
     let mut game = UltimateTicTacToe::new();
     while !game.is_terminal() {
         let mut mcts = Mcts::new(game.clone(), 1.4142356237);
-        let action = mcts.search(1000);
+        let action = mcts.search(1500);
         game = game.step(action);
         game.render();
     }
